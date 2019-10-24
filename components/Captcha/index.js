@@ -6,8 +6,9 @@ export default class Captcha extends React.Component {
   state = {
     loading: true,
     id: null,
-    image: null,
-    targetColor: '#fff',
+    stripImage: null,
+    targetImage:
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAlElEQVRoQ+3SwQkAMQzEwLj/op0eBIIQdH8vRHOzu3s++KaHPKaYyGMgJ5FEpAL9WlJYPJsITicdJiKFxbOJ4HTSYSJSWDybCE4nHSYihcWzieB00mEiUlg8mwhOJx0mIoXFs4ngdNJhIlJYPJsITicdJiKFxbOJ4HTSYSJSWDybCE4nHSYihcWzieB00mEiUlg8ewGv1sdrflPqwQAAAABJRU5ErkJggg==', // white square
     index: Math.floor(this.blockCount / 2), //Middle of an odd number with 0 based index
     offsetX: 0
   };
@@ -37,8 +38,8 @@ export default class Captcha extends React.Component {
   };
 
   onTouchMove = e => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
     this.onMouseMove({ clientX: e.targetTouches[0].clientX });
   };
 
@@ -56,14 +57,14 @@ export default class Captcha extends React.Component {
   onMouseUp = e => {
     // this.debug(e, 'mouseUp');
     let offsetX = this.state.offsetX;
-    const width = this.blockWidth * (Math.floor(this.blockCount/2))
+    const width = this.blockWidth * Math.floor(this.blockCount / 2);
     const maxOffset = width;
     const minOffset = -width;
     if (offsetX > maxOffset) {
-      offsetX = maxOffset
+      offsetX = maxOffset;
     }
     if (offsetX < minOffset) {
-      offsetX = minOffset
+      offsetX = minOffset;
     }
     const mod = offsetX % this.blockWidth;
 
@@ -115,15 +116,16 @@ export default class Captcha extends React.Component {
       index: Math.floor(this.blockCount / 2)
     });
     this.prevOffsetX = 0;
-    const { id, image, targetColor } = await (await fetch(
+    const { id, stripImage, targetImage, use } = await (await fetch(
       this.captchaUrl
     )).json();
-    console.log(`got captcha`, id);
+    console.log(`got captcha`, use);
     this.setState({
       loading: false,
       id,
-      image,
-      targetColor,
+      use,
+      stripImage,
+      targetImage,
       offsetX: 0
     });
   };
@@ -159,7 +161,10 @@ export default class Captcha extends React.Component {
     return (
       <div>
         <div className="captcha-root">
-          <p>Drag the strip to align the colors</p>
+          <p>
+            Drag the strip to match the{' '}
+            <span className="use">{this.state.use}</span>
+          </p>
           {this.state.success ? (
             <div>
               <div>✅ Success</div>
@@ -168,60 +173,66 @@ export default class Captcha extends React.Component {
               </p>
             </div>
           ) : (
-            <div id="captcha">
-              <div className="arrow-box">
-                <svg
-                  style={{ transform: 'rotate(180deg)', marginTop: '20px' }}
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="30"
-                  height="30"
-                  viewBox="0 0 97.3 97.3"
-                  className="arrow"
-                >
-                  <path d="M84 34.5L50 .5a2 2 0 00-2.8 0l-33.9 34a2 2 0 000 2.8l9 9a2 2 0 002.9 0l14.5-14.5v63.5c0 1 1 2 2 2h13.9a2 2 0 002-2V31.8L72 46.3c.7.8 2 .8 2.8 0l9-9a2 2 0 000-2.8z" />
-                </svg>
-              </div>
-              <div
-                className="slide-target"
-                style={{ backgroundColor: this.state.targetColor }}
-              />
-              <div className="slide-container">
-                <div
-                  className="slider"
-                  onMouseDown={this.onMouseDown}
-                  onTouchStart={this.onTouchStart}
-                  onTouchMove={this.onTouchMove}
-                  onTouchEnd={this.onTouchEnd}
-                  onDragStart={this.onDragStart} // avoid bug
-                  // onTouchEnd={e => e.preventDefault()}
-                  style={{ transform: `translateX(${this.state.offsetX}px)` }}
-                >
-                  {this.state.loading ? (
-                    <div>loading...</div>
-                  ) : (
-                    <img src={this.state.image} className="captcha-image" />
-                  )}
-                </div>
-              </div>
-              <div className="arrow-box">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="30"
-                  height="30"
-                  viewBox="0 0 97.3 97.3"
-                  className="arrow"
-                >
-                  <path d="M84 34.5L50 .5a2 2 0 00-2.8 0l-33.9 34a2 2 0 000 2.8l9 9a2 2 0 002.9 0l14.5-14.5v63.5c0 1 1 2 2 2h13.9a2 2 0 002-2V31.8L72 46.3c.7.8 2 .8 2.8 0l9-9a2 2 0 000-2.8z" />
-                </svg>
-              </div>
-              <div>
-                <button onClick={this.submit}>Submit</button>
-                {this.state.fail && (
-                  <div className="error">
-                    <p>Sorry, try again.</p>
+            <div>
+              {this.state.loading ? (
+                <div></div>
+              ) : (
+                <div id="captcha">
+                  <div className="arrow-box">
+                    <svg
+                      style={{ transform: 'rotate(180deg)', marginTop: '20px' }}
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="30"
+                      height="30"
+                      viewBox="0 0 97.3 97.3"
+                      className="arrow"
+                    >
+                      <path d="M84 34.5L50 .5a2 2 0 00-2.8 0l-33.9 34a2 2 0 000 2.8l9 9a2 2 0 002.9 0l14.5-14.5v63.5c0 1 1 2 2 2h13.9a2 2 0 002-2V31.8L72 46.3c.7.8 2 .8 2.8 0l9-9a2 2 0 000-2.8z" />
+                    </svg>
                   </div>
-                )}
-              </div>
+                  <div className="slide-target">
+                    <img src={this.state.targetImage} />
+                  </div>
+                  <div className="slide-container">
+                    <div
+                      className="slider"
+                      onMouseDown={this.onMouseDown}
+                      onTouchStart={this.onTouchStart}
+                      onTouchMove={this.onTouchMove}
+                      onTouchEnd={this.onTouchEnd}
+                      onDragStart={this.onDragStart} // avoid bug
+                      // onTouchEnd={e => e.preventDefault()}
+                      style={{
+                        transform: `translateX(${this.state.offsetX}px)`
+                      }}
+                    >
+                      <img
+                        src={this.state.stripImage}
+                        className="captcha-image"
+                      />
+                    </div>
+                  </div>
+                  <div className="arrow-box">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="30"
+                      height="30"
+                      viewBox="0 0 97.3 97.3"
+                      className="arrow"
+                    >
+                      <path d="M84 34.5L50 .5a2 2 0 00-2.8 0l-33.9 34a2 2 0 000 2.8l9 9a2 2 0 002.9 0l14.5-14.5v63.5c0 1 1 2 2 2h13.9a2 2 0 002-2V31.8L72 46.3c.7.8 2 .8 2.8 0l9-9a2 2 0 000-2.8z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <button onClick={this.submit}>Submit</button>
+                    {this.state.fail && (
+                      <div className="error">
+                        <p>Sorry, try again.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -230,6 +241,12 @@ export default class Captcha extends React.Component {
             // border: 1px solid gray;
             padding: 20px;
             text-align: center;
+          }
+          .use {
+            font-size: 18px;
+            font-weight: 600;
+            text-decoration: underline;
+            color: #151515;
           }
           .slide-container {
             margin: 0 auto;
@@ -243,12 +260,12 @@ export default class Captcha extends React.Component {
             display: block;
             margin: 0 auto;
           }
-          .slide-target::after{
-            content: "";
+          .slide-target::after {
+            content: '';
             border: 5px solid black;
             // box-sizing: border-box;
             position: relative;
-            top: 0px;
+            top: -54px;
             left: -2.5px;
             width: 45px;
             height: 95px;
