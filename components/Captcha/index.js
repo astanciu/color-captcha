@@ -190,7 +190,14 @@ export default class Captcha extends React.Component {
                       <path d="M84 34.5L50 .5a2 2 0 00-2.8 0l-33.9 34a2 2 0 000 2.8l9 9a2 2 0 002.9 0l14.5-14.5v63.5c0 1 1 2 2 2h13.9a2 2 0 002-2V31.8L72 46.3c.7.8 2 .8 2.8 0l9-9a2 2 0 000-2.8z" />
                     </svg>
                   </div>
-                  <div className="slide-target">
+                  <div
+                    className="slide-target"
+                    onMouseDown={this.onMouseDown}
+                    onTouchStart={this.onTouchStart}
+                    onTouchMove={this.onTouchMove}
+                    onTouchEnd={this.onTouchEnd}
+                    onDragStart={this.onDragStart}
+                  >
                     <img src={this.state.targetImage} />
                   </div>
                   <div className="slide-container">
@@ -262,15 +269,16 @@ export default class Captcha extends React.Component {
           }
           .slide-target::after {
             content: '';
-            border: 5px solid black;
-            // box-sizing: border-box;
+            border-left: 5px solid #58575e;
             position: relative;
-            top: -54px;
+            top: -53px;
             left: -2.5px;
             width: 45px;
             height: 95px;
             display: block;
             z-index: 100;
+            padding-top: 4px;
+            border-right: 5px solid #58575e;
           }
           .arrow-box {
             width: ${this.blockWidth}px;
