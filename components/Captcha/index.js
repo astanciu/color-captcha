@@ -13,7 +13,6 @@ export default class Captcha extends React.Component {
   };
   prevOffsetX = 0;
   mouseDown = null;
-  slider = React.createRef();
 
   constructor(props) {
     super(props);
@@ -25,13 +24,31 @@ export default class Captcha extends React.Component {
     this.getCaptcha();
   }
 
-  onDragStart = e => {
-    console.log(`DragStart `, e);
+  onTouchStart = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.onMouseDown({ clientX: e.targetTouches[0].clientX });
+  };
+
+  onTouchEnd = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.onMouseUp();
+  };
+
+  onTouchMove = e => {
+    e.preventDefault()
+    e.stopPropagation()
+    this.onMouseMove({ clientX: e.targetTouches[0].clientX });
   };
 
   onMouseDown = e => {
-    this.mouseDown = e.clientX;
     // this.debug(e, 'mouseDown');
+
+    if (this.state.fail) {
+      this.setState({ fail: false });
+    }
+    this.mouseDown = e.clientX;
     document.addEventListener('mousemove', this.onMouseMove);
     document.addEventListener('mouseup', this.onMouseUp);
   };
@@ -39,6 +56,15 @@ export default class Captcha extends React.Component {
   onMouseUp = e => {
     // this.debug(e, 'mouseUp');
     let offsetX = this.state.offsetX;
+    const width = this.blockWidth * (Math.floor(this.blockCount/2))
+    const maxOffset = width;
+    const minOffset = -width;
+    if (offsetX > maxOffset) {
+      offsetX = maxOffset
+    }
+    if (offsetX < minOffset) {
+      offsetX = minOffset
+    }
     const mod = offsetX % this.blockWidth;
 
     if (Math.abs(mod) < this.blockWidth / 2) {
@@ -59,13 +85,14 @@ export default class Captcha extends React.Component {
   };
 
   onMouseMove = e => {
+    // this.debug(e, 'mouseMove');
     const offsetX = this.prevOffsetX + e.clientX - this.mouseDown;
     this.setState({ offsetX });
   };
 
-  onDrag = e => {
-    e.preventDefault();
-    return false;
+  debug = (e, name) => {
+    if (!e) e = {};
+    console.log(name, e.clientX, e.type);
   };
 
   onDragStart = e => {
@@ -87,14 +114,17 @@ export default class Captcha extends React.Component {
       success: false,
       index: Math.floor(this.blockCount / 2)
     });
+    this.prevOffsetX = 0;
     const { id, image, targetColor } = await (await fetch(
       this.captchaUrl
     )).json();
+    console.log(`got captcha`, id);
     this.setState({
       loading: false,
       id,
       image,
-      targetColor
+      targetColor,
+      offsetX: 0
     });
   };
 
@@ -129,7 +159,7 @@ export default class Captcha extends React.Component {
     return (
       <div>
         <div className="captcha-root">
-          <p>Align the colors</p>
+          <p>Drag the strip to align the colors</p>
           {this.state.success ? (
             <div>
               <div>✅ Success</div>
@@ -158,11 +188,12 @@ export default class Captcha extends React.Component {
               <div className="slide-container">
                 <div
                   className="slider"
-                  ref={this.slider}
                   onMouseDown={this.onMouseDown}
-                  // onMouseUp={this.onMouseUp}
-                  onDrag={this.onDrag}
-                  onDragStart={this.onDragStart}
+                  onTouchStart={this.onTouchStart}
+                  onTouchMove={this.onTouchMove}
+                  onTouchEnd={this.onTouchEnd}
+                  onDragStart={this.onDragStart} // avoid bug
+                  // onTouchEnd={e => e.preventDefault()}
                   style={{ transform: `translateX(${this.state.offsetX}px)` }}
                 >
                   {this.state.loading ? (
@@ -210,11 +241,19 @@ export default class Captcha extends React.Component {
             width: ${this.blockWidth}px;
             height: ${this.blockWidth}px;
             display: block;
-            // border: 2px solid black;
-            box-sizing: border-box;
-            -moz-box-sizing: border-box;
-            -webkit-box-sizing: border-box;
             margin: 0 auto;
+          }
+          .slide-target::after{
+            content: "";
+            border: 5px solid black;
+            // box-sizing: border-box;
+            position: relative;
+            top: 0px;
+            left: -2.5px;
+            width: 45px;
+            height: 95px;
+            display: block;
+            z-index: 100;
           }
           .arrow-box {
             width: ${this.blockWidth}px;
@@ -237,7 +276,7 @@ export default class Captcha extends React.Component {
             color: #242121;
             border: 1px solid #a4a4a4;
             padding: 10px 20px;
-            background-color:#e7e8e7;
+            background-color: #e7e8e7;
             border-radius: 3px;
             font-size: 14px;
             line-height: 14px;
