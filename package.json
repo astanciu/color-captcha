@@ -10,7 +10,7 @@
   "dependencies": {
     "canvas": "^2.6.0",
     "canvas-5-polyfill": "^0.1.5",
-    "next": "9.1.1",
+    "next": "9.3.2",
     "react": "16.11.0",
     "react-dom": "16.11.0"
   }
